@@ -125,6 +125,7 @@ venv.bak/
 db_genres.json
 db_mivies.json
 db_movies.json
+staticfiles/
 
 # Spyder project settings
 .spyderproject

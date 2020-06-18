@@ -20,7 +20,7 @@ def index(request):
     users_movies = Movie.objects.annotate(q_count=Count('like_users')).order_by('-q_count')[:6]
     random_movie = requests.get('https://api.themoviedb.org/3/movie/upcoming?api_key='+api_key+'&language=ko-KR&page=1&region=KR').json()
     random_movie = random.choice(random_movie['results'])
-    api_key = settings.SECRET_KEY
+    api_key = settings.API_SECRET_KEY
     context = {
         'recommend_movies': recommend_movies,
         'pop_movies': pop_movies,
@@ -84,7 +84,7 @@ def article_list(request):
 
 def movie_detail(request, movie_pk):
     movie = get_object_or_404(Movie.objects.annotate(like_count=Count('like_users')).prefetch_related('article_set'),pk=movie_pk)
-    api_key = settings.SECRET_KEY
+    api_key = settings.API_SECRET_KEY
     tmdb_key = settings.TMDB_KEY
     score = 0
     people = 0

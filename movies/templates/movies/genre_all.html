@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %} 모든 장르 {% endblock %}
+
+{% block content %}
+<div class="container">
+  {% for genre in genres %}
+  <hr>
+  <button type="button" class="btn btn-outline-primary btn-lg" data-toggle="modal" data-target="#modal{{genre.pk}}">
+    {{ genre.name }}
+  </button>
+
+  <div class="modal fade" id="modal{{genre.pk}}" tabindex="-1" role="dialog" aria-labelledby="modal{{genre.pk}}Label" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modal{{genre.pk}}Label">{{ genre.name }}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <h2>대표 영화</h2>
+          {% for movie in genre.movies.all|slice:":1" %}
+          <img class="my-3" src="https://image.tmdb.org/t/p/w342/{{movie.poster_path}}">
+          {% endfor %}
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">닫기</button>
+          <a class="btn btn-primary" href="{% url 'movies:genre_detail' genre.pk %}">장르 영화 목록</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

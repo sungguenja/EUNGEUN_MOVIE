@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+{% load bootstrap_pagination %}
+
+{% block css %}
+<style>
+  h1 {
+    font-family: 'Gugi', cursive; 
+    color: crimson;
+    background-color: #f8f9fa;
+  }
+  .form-control {
+    cursor: pointer;
+  }
+  ul.pagination {
+    justify-content: center;
+  }
+  .card-img-top {
+    height: 450px;
+  }
+  .card-footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 8px;
+  }
+  .pagination > li > a {
+    color: crimson;
+    background-color: #f8f9fa;
+  }
+  .pagination > li > a:focus,
+  .pagination > li > a:hover,
+  .pagination > li > span:focus,
+  .pagination > li > span:hover{
+    color: crimson;
+  }
+  .page-item:first-child .page-link,
+  .page-item:last-child .page-link{
+    color: crimson;
+    background-color: #f8f9fa;
+  }
+  .page-item.active .page-link {
+    z-index: 1;
+    color: #f8f9fa;
+    background-color: crimson;
+    border-color: crimson;
+  }
+</style>
+{% endblock %}
+
+{% block title %} 모든 장르 {% endblock %}
+
+
+{% block content %}
+  <div class="container mb-3">
+    <div class="row">
+      <h1 class="my-3 py-3 col-12 text-center">영화</h1>
+      <div class="col-3 pl-0">
+        <select id="sort-select" class="mb-3 form-control" onchange="location = this.value;">
+          <option class="sort-date" value="?sort=rel">최신순</option>
+          <option class="sort-vote" value="?sort=vote">평점순</option>
+          <option class="sort-pop" value="?sort=pop">흥행순</option>
+          <option class="sort-likes" value="?sort=likes">좋아요순</option>
+        </select>
+      </div>
+      <div class="col-9"></div>
+      <div class="list-group col-3">
+        {% if genre_on %}
+        <a href="{% url 'movies:movie_all' %}" class="text-decoration-none"><button type="button" class="list-group-item list-group-item-action" style="background: #f8f9fa; color: #424242;">
+          모든 영화
+        </button></a>
+        {% else %}
+        <a href="{% url 'movies:movie_all' %}" class="text-decoration-none"><button type="button" class="list-group-item list-group-item-action text-light" style="background: crimson;">
+          모든 영화
+        </button></a>
+        {% endif %}
+        {% for genre in genres %}
+        {% if genre.pk != 99 %}
+          {% if genre_on.pk != genre.pk %}
+            <a href="{% url 'movies:genre_detail' genre.pk %}" class="text-decoration-none"><button type="button" class="list-group-item list-group-item-action" style="background: #f8f9fa; color: #424242;">{{ genre.name }}</button></a>
+          {% else %}
+            <a href="{% url 'movies:genre_detail' genre.pk %}" class="text-decoration-none"><button type="button" class="list-group-item list-group-item-action text-light" style="background: crimson;">{{ genre.name }}</button></a>
+          {% endif %}
+        {% endif %}
+        {% endfor %}
+      </div>
+      <div class="col-9 pr-0">
+        <div class="row">
+          {% for movie in page_obj %}
+            <div class="col-4 mb-3">
+              <div class="card h-100" style="background: #f8f9fa;">
+                <a href="{% url 'movies:movie_detail' movie.pk %}" class="text-decoration-none text-dark">
+                  <img src="https://image.tmdb.org/t/p/w780/{{movie.poster_path}}" class="card-img-top" alt="영화 포스터 이미지">
+                  <div class="card-body">
+                    <h5 class="card-title" style=" color: #424242;">{{ movie.title }}</h5>
+                    {% for genre in movie.genres.all|slice:":1" %}
+                    <p class="card-text" style=" color: #424242;">{{ genre.name }}</p>
+                    {% endfor %}
+                    <p class="card-text" style=" color: #424242;">{{ movie.vote_average }}</p>
+                    <p class="card-text" style=" color: #424242;">{{ movie.release_date }}</p>
+                  </div>
+                  <br>
+                  <br>
+                </a>
+                <div class="card-footer">
+                  <h5 class="mb-0"><div class="d-flex justify-content-between">{% if request.user in movie.like_users.all %}<i class="fas fa-heart text-danger like-button" data-id="{{movie.pk}}" style="cursor: pointer;"></i>{% else %}<i class="far fa-heart text-danger like-button" data-id="{{movie.pk}}" style="cursor: pointer;"></i>{% endif %}<a id="li{{movie.pk}}ke">{{movie.like_count}} 명이 좋아합니다</a></div></h5>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% bootstrap_paginate page_obj range=10 show_prev_next="false" show_first_last="true" %}
+  <div class="pagination justify-content-center mb-3">
+    <span class="current text-light">
+      Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+    </span>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+  const likeButtons = document.querySelectorAll('.like-button')
+  likeButtons.forEach(function(likeButton) {
+    likeButton.addEventListener('click', function(event) {
+      const movieId = event.target.dataset.id
+      // 배포시 수정
+      axios.get("{% url 'movies:movie_like' 1234 %}".replace(1234,movieId))
+      .then(res => {
+        if (res.data.logined) {
+          if (res.data.like) {
+            event.target.className = 'fas fa-heart text-danger like-button'
+            const likeA = document.querySelector(`#li${movieId}ke`)
+            likeA.innerText = `${res.data.like_people} 명이 좋아합니다 `
+          } else {
+            event.target.className = 'far fa-heart text-danger like-button'
+            const likeA = document.querySelector(`#li${movieId}ke`)
+            likeA.innerText = `${res.data.like_people} 명이 좋아합니다 `
+          }
+        } else { alert('로그인을 해주세요 ')}
+      })
+      .catch(err => {console.log(err)})
+    })
+  })
+
+  // get url query string
+  var getUrlParameter = function getUrlParameter(sParam) {
+    var sPageURL = decodeURIComponent(window.location.search.substring(1)),
+        sURLVariables = sPageURL.split('&'),
+        sParameterName,
+        i;
+
+    for (i = 0; i < sURLVariables.length; i++) {
+        sParameterName = sURLVariables[i].split('=');
+
+        if (sParameterName[0] === sParam) {
+            return sParameterName[1] === undefined ? true : sParameterName[1];
+        }
+    }
+  };
+  // 정렬방식 셀렉트 박스 유지
+  $(document).ready(function(){
+    var sort = getUrlParameter('sort');
+    if(sort == 'likes'){
+      $('.sort-likes').prop('selected', 'selected')
+    }else if(sort == 'pop'){
+      $('.sort-pop').prop('selected', 'selected')
+    }else if(sort == 'vote') {
+      $('.sort-vote').prop('selected', 'selected')
+    }else {
+      $('.sort-date').prop('selected', 'selected')
+    }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}검색 결과{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="row">
+    <div class="col-6 text-center">
+      <h1 class="text-light">영화 검색 결과 입니다</h1>
+      <table class="table table-hover table-striped table-light w-100">
+        <thead>
+          <tr>
+            <th scope="col">No.</th>
+            <th scope="col">영화 제목</th>
+            <th scope="col">평론가 평점</th>
+            <th scope="col">상세정보</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for movie in movies %}
+          <tr>
+            <th scope="row">{{ forloop.counter }}</th>
+            <td>{{ movie.title }}</td>
+            <td>{{ movie.vote_average}}</td>
+            <td><a class="btn btn-outline-dark" href="{% url 'movies:movie_detail' movie.pk %}">상세정보</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="col-6 text-center">
+        <h1 class="text-light">게시글 검색 결과 입니다</h1>
+        <table class="table table-hover table-dark w-100">
+          <thead>
+            <tr>
+              <th scope="col">No.</th>
+              <th scope="col">영화 제목</th>
+              <th scope="col">게시글 제목</th>
+              <th scope="col">작성자</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for article in articles %}
+            <tr>
+              <th scope="row"><a class="text-light">{{ forloop.counter }}</a></th>
+              <td><a href="{% url 'movies:article_detail' article.pk %}" class="text-decoration-none text-light"> {{ article.movie.title }} </a></td>
+              <td><a href="{% url 'movies:article_detail' article.pk %}" class="text-decoration-none text-light"> {{ article.title }} </a></td>
+              <td><a class="text-light">{{ article.user }}</a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+  </div>
+</div>
+{% endblock %}

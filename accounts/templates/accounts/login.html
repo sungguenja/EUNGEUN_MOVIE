@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+{% load socialaccount %}
+
+{% block title %}로그인을 부탁드립니다{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1 class="mt-5 text-center text-light">login</h1>
+  <hr>
+  <form action="" method="POST" class="text-light">
+    {% csrf_token %}
+    {% bootstrap_form form %}
+    <div class="d-flex justify-content-end">
+      <button class="btn btn-success">로그인</button>
+    </div>
+    <div class="text-center mt-4">
+    <a class="text-light mb-3">구글 또는 카카오 계정이 있으신가요?</a><br>
+    <a class="text-white btn btn-primary mr-3 my-3" href="{% provider_login_url 'google' %}">구글 계정으로 로그인</a>
+    <a href="{% provider_login_url 'kakao' %}" class="text-white btn btn-warning my-3">카카오 계정으로 로그인</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

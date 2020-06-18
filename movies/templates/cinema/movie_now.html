@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block css %}
+<style>
+  .card {
+    background-color: #f8f9fa;
+  }
+  .card-title {
+    color: #424242;
+  }
+  .card-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 3; /* 라인수 */
+    -webkit-box-orient: vertical;
+    word-wrap:break-word; 
+    line-height: 1.2em;
+    height: 3.6em;
+    color: #424242;
+  }
+  h1 {
+    font-family: 'Gugi', cursive; 
+    color: crimson;
+    background-color: #f8f9fa;
+  }
+  img:not(#logo) {
+    height: 600px;
+  }
+</style>
+{% endblock %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container text-center">
+  <div class="row">
+    <h1 class="my-3 py-3 col-12">{{ title }}</h1>
+    {% for movie in data %}
+    <div class="card col-4 my-3 py-3">
+      <img src="https://image.tmdb.org/t/p/w780/{{movie.poster_path}}" class="card-img-top" alt="...">
+      <div class="card-body">
+        <div>
+          <h5 class="card-title d-inline">{{ movie.title }}<span class="badge badge-info ml-2 d-inline">{{movie.vote_average}}</span></h5>
+        </div>
+        <hr>
+        <p class="card-text">{{ movie.overview }}</p>
+        {% if movie.db %}
+        <a href="{% url 'movies:movie_detail' movie.id %}" class="btn btn-outline-dark"> 영화상세정보 </a>
+        {% else %}
+        <a class="btn btn-outline-secondary" style="cursor: pointer;">영화 정보가 없습니다</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

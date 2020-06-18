@@ -1,0 +1,279 @@
+{% extends 'base.html' %}
+
+{% load bootstrap4 %}
+
+{% block css %}
+<style>
+  .carousel-inner > .carousel-item > img {
+    margin: 0 auto;
+  }
+  .top12 {
+    margin-right: -15px;
+    margin-left: 0px;
+    border: 1px solid rgba(0,0,0,.125);
+  }
+  .ment {
+    padding: 15px 0;
+    text-align: center;
+    background: rgb(220, 20, 60);
+    color: rgb(255, 255, 255);
+    border: 1px solid rgba(0,0,0,.125);
+  }
+  .indicator {
+    margin: 0 15px;
+    border-bottom-right-radius: .5rem;
+    border-bottom-left-radius: .5rem;
+    border: 1px solid rgba(0,0,0,.125);
+    background-color: rgb(60, 60, 60);
+  }
+  .caption1 {
+    font-weight: bold;
+    background-color: #ffffff;
+    background-color: rgb(0, 0, 0, 0.5);
+  }
+  .card1 {
+    background: #f1f3f5;
+  }
+  .description {
+    color: #424242;
+  }
+  .articles {
+    background: rgb(220, 20, 60);
+    color: rgb(255, 255, 255);
+    padding: 17.5px 20px;
+  }
+  .article {
+    color: #424242;
+  }
+  .carousel2 {
+    border-top-left-radius: .5rem;
+    border-top-right-radius: .5rem;
+    border-bottom-right-radius: .5rem;
+    border-bottom-left-radius: .5rem;
+  }
+  .list-group-item:first-child {
+    border-top-left-radius: .5rem;
+    border-top-right-radius: .5rem;
+  }
+  .list-group-item:last-child {
+    border-bottom-right-radius: .25rem;
+    border-bottom-left-radius: .25rem;
+  }
+  .modal1 {
+    height: 600px;
+    width: 800px;
+  }
+  .card-img-top {
+    height: 220px;
+  }
+</style>
+{% endblock %}
+
+{% block title %} 메인화면 {% endblock %}
+
+{% block content %}
+<div id="headcarousel" class="carousel slide mb-3 section vh-100" data-ride="carousel">
+  <ol class="carousel-indicators">
+    <li data-target="#headcarousel" data-slide-to="0" class="active"></li>
+    <li data-target="#headcarousel" data-slide-to="1"></li>
+    <li data-target="#headcarousel" data-slide-to="2"></li>
+    <li data-target="#headcarousel" data-slide-to="3"></li>
+    <li data-target="#headcarousel" data-slide-to="4"></li>
+    <li data-target="#headcarousel" data-slide-to="5"></li>
+    <li data-target="#headcarousel" data-slide-to="6"></li>
+    <li data-target="#headcarousel" data-slide-to="7"></li>
+    <li data-target="#headcarousel" data-slide-to="8"></li>
+    <li data-target="#headcarousel" data-slide-to="9"></li>
+  </ol>
+  <div class="carousel-inner">
+    {% for movie in recommend_movies %}
+    {% if forloop.counter0 == 0 %}
+    <div class="carousel-item active carousel-background">
+      <img src="https://image.tmdb.org/t/p/w780/{{movie.backdrop_path}}" class="d-block vh-100 vw-100" alt="영화 이미지">
+      <div class="carousel-caption d-none d-md-block caption1">
+        <h5 class="mb-4"><a class="text-decoration-none text-light">{{ movie.title }}</a></h5>
+      </div>
+    </div>
+    {% else %}
+    <div class="carousel-item carousel-background">
+      <img src="https://image.tmdb.org/t/p/w780/{{movie.backdrop_path}}" class="d-block vh-100 vw-100" alt="영화 이미지">
+      <div class="carousel-caption d-none d-md-block caption1">
+        <h5 class="mb-4"><a class="text-decoration-none text-light">{{ movie.title }}</a></h5>
+      </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+  <a class="carousel-control-prev" href="#headcarousel" role="button" data-slide="prev">
+    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+    <span class="sr-only">Previous</span>
+  </a>
+  <a class="carousel-control-next" href="#headcarousel" role="button" data-slide="next">
+    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+    <span class="sr-only">Next</span>
+  </a>
+</div>
+<div class="container my-3">
+  <div class="row section">
+    <div id="carouselExampleCaptions" class="carousel slide col-6 d-flex justify-content-center pb-3" data-ride="carousel">
+      <ol class="carousel-indicators indicator">
+        <li data-target="#carouselExampleCaptions" data-slide-to="0" class="active"></li>
+        <li data-target="#carouselExampleCaptions" data-slide-to="1"></li>
+        <li data-target="#carouselExampleCaptions" data-slide-to="2"></li>
+      </ol>
+      <div class="carousel-inner bg-light carousel2">
+        <div class="carousel-item active">
+          <h3 class="ment mb-0">유저 인기 탑 6</h3>
+          <div class="row w-100 top12 pt-3">
+            {% for movie in users_movies %}
+            <div class="col-4 mb-4">
+              <div class="card h-100 card1">
+                <a href="{% url 'movies:movie_detail' movie.pk%}" class="text-decoration-none">
+                  <img src="https://image.tmdb.org/t/p/w780/{{movie.poster_path}}" class="card-img-top">
+                  <div class="card-body">
+                      <b class="card-text description">{{movie.title}}</b>
+                    <hr>
+                    {% for genre in movie.genres.all|slice:":1" %}
+                    <p class="description">{{genre.name}}</p>
+                    {% endfor %}
+                  </div>
+                </a>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="carousel-item">
+          <h3 class="ment mb-0">인지도 탑 6</h3>
+          <div class="row w-100 top12 pt-3">
+            {% for movie in pop_movies %}
+            <div class="col-4 mb-4">
+              <div class="card h-100 card1">
+                <img src="https://image.tmdb.org/t/p/w780/{{movie.poster_path}}" class="card-img-top">
+                <div class="card-body">
+                  <a href="{% url 'movies:movie_detail' movie.pk%}" class="text-decoration-none"><b class="card-text description">{{movie.title}}</b></a>
+                  <hr>
+                  {% for genre in movie.genres.all|slice:":1" %}
+                  <p class="description">{{genre.name}}</p>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="carousel-item">
+          <h3 class="ment mb-0">평점 탑 6</h3>
+          <div class="row w-100 top12 pt-3">
+            {% for movie in vote_movies %}
+            <div class="col-4 mb-4">
+              <div class="card h-100 card1">
+                <img src="https://image.tmdb.org/t/p/w780/{{movie.poster_path}}" class="card-img-top">
+                <div class="card-body">
+                    <a href="{% url 'movies:movie_detail' movie.pk%}" class="text-decoration-none"><b class="card-text description">{{movie.title}}</b></a>
+                    <hr>
+                    {% for genre in movie.genres.all|slice:":1" %}
+                    <p class="description">{{genre.name}}</p>
+                    {% endfor %}
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+      </div>
+      <a class="carousel-control-prev" href="#carouselExampleCaptions" role="button" data-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="sr-only">Previous</span>
+      </a>
+      <a class="carousel-control-next" href="#carouselExampleCaptions" role="button" data-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="sr-only">Next</span>
+      </a>
+    </div>
+  </div>
+  <div class="col-6">
+    <div class="list-group mb-3">
+      <h4 class="list-group-item articles text-center">
+        금일의 기대작
+      </h4>
+      <div class="list-group-item list-group-item-action article d-flex justify-content-center align-items-center py-3">
+        <img src="https://image.tmdb.org/t/p/w185/{{random_movie.poster_path}}" class="mx-3">
+        <div class="mx-3">
+        <p>영화 제목 : {{random_movie.title}}</p>
+        <p>영화 평점 : {{random_movie.vote_average}}</p>
+        <p>영화 인지도 : {{random_movie.popularity}}</p>
+        <!-- Button trigger modal -->
+        <button type="button" class="btn btn-outline-dark" data-toggle="modal" data-target="#exampleModal" id="trailer-button">
+          트레일러 보기
+        </button>
+        </div>
+      </div>
+    </div>
+    <div class="list-group">
+      <h4 class="list-group-item articles text-center">
+        최신 커뮤니티글
+      </h4>
+      {% for article in articles %}
+      <a href="{% url 'movies:article_detail' article.pk %}" class="list-group-item list-group-item-action article">{{ article.movie.title }} - {{ article.title }} - 평점 {{article.rank}}</a>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+<!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">{{movie.title}} 트레일러</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body modal1">
+        <iframe id="trailer-box" class="embed-responsive-item h-100 w-100" src="" allowfullscreen></iframe>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+  var win_h = $(window).height();
+  $('.section').each(function(index){
+    $(this).attr("data-index",win_h * index);
+  });
+  $('.section').on("mousewheel DOMMouseScroll",function(e){
+    var sectionPos = parseInt($(this).attr("data-index"));
+    if(e.originalEvent.wheelDelta >= 0) {
+      $("html,body").stop().animate({scrollTop:sectionPos - win_h});
+      return false;
+    } else if (e.originalEvent.wheelDelta < 0) {
+      $("html,body").stop().animate({scrollTop:sectionPos + win_h});
+      return false; 
+    }
+  });
+
+  const trailerButton = document.querySelector('#trailer-button')
+  trailerButton.addEventListener('click', function(event) {
+    const API_URL = "https://www.googleapis.com/youtube/v3/search"
+    const API_KEY = "{{api_key}}"
+    axios.get(API_URL, {
+      params: {
+        key: API_KEY,
+        part: 'snippet',
+        type: 'video',
+        q: "movie {{ random_movie.original_title }} official trailer"
+      }
+    })
+    .then(res => {
+      const trailerWindow = document.querySelector('#trailer-box')
+      trailerWindow.src = `https://www.youtube.com/embed/${res.data.items[0].id.videoId}`
+    })
+    .catch(err => {console.log(err)})
+  })
+</script>
+{% endblock %}

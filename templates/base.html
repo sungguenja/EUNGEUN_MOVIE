@@ -1,0 +1,117 @@
+{% load static %}
+<!DOCTYPE html>
+{% load bootstrap4 %}
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  {% bootstrap_css %}
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.13.0/css/all.css" integrity="sha384-Bfad6CLCknfcloXFOyFnlgtENryhrpZCe29RTifKEixXQZ38WheV+i/6YWSzkz3V" crossorigin="anonymous">
+  <link href="https://fonts.googleapis.com/css2?family=Gugi&display=swap" rel="stylesheet">
+  <style>
+    @font-face { font-family: 'SeoulNamsanM'; src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/SeoulNamsanM.woff') format('woff'); font-weight: normal; font-style: normal; }
+    body {
+      font-family: 'SeoulNamsanM';
+      background: rgb(37, 38, 38);
+    }
+    .dropdown-item:hover {
+      background-color: rgb(70, 70, 70);
+    }
+    nav {
+      background-color: rgb(60, 60, 60);
+    }
+    .btn {
+      outline-color: crimson;
+    }
+    .danger {
+      border-color: crimson;
+      color: crimson;
+    }
+    .danger:hover {
+      background: crimson;
+      color: white;
+    }
+    .topbutton {
+      position: fixed;
+      right: 30px ;
+      bottom: 30px;
+      padding: 3px 7.5px;
+      z-index: 1;
+    }
+    .dropdown-menu {
+      background-color: rgb(60, 60, 60);
+    }
+  </style>
+  {% block css %}
+  {% endblock %}
+  <title>{% block title %}{% endblock %}</title>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark justify-content-between sticky-top">
+    <a class="navbar-brand d-flex align-items-center" href="{% url 'movies:index' %}" style="color: #7fffd4;"><img id="logo" src="{% static 'logo.png' %}" height="35"><span class="d-inline-block ml-2 eunguen" style="font-family: 'Gugi', cursive;">EUNGEUN Movie</span></a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+      <div class="navbar-nav">
+        <a class="nav-item nav-link active" href="{% url 'movies:index' %}"> 메인 화면 <span class="sr-only">(current)</span></a>
+        <div class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="listDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          카테고리
+          </a>
+          <div class="dropdown-menu" aria-labelledby="listDropdown">
+            <a class="dropdown-item text-light" href="{% url 'movies:movie_all' %}">모든 영화</a>
+            <a class="dropdown-item text-light" href="{% url 'movies:article_list' %}">모든 게시글</a>
+          </div>
+        </div>
+        <div class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            다양한 기능
+          </a>
+          <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+            <a class="dropdown-item text-light" href="{% url 'movies:recommend' %}">영화 추천</a>
+            <a class="dropdown-item text-light" href="{% url 'movies:worldcup' %}">영화 월드컵</a>
+          </div>
+        </div>
+        <div class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            극장
+          </a>
+          <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+            <a class="dropdown-item text-light" href="{% url 'movies:movie_now' %}">현재 상영작</a>
+            <a class="dropdown-item text-light" href="{% url 'movies:movie_upcoming' %}">개봉 예정작</a>
+          </div>
+      </div>
+    </div>
+    <div class="collapse navbar-collapse justify-content-end" id="navbarNavAltMarkup">
+      <div class="navbar-nav">
+        <form class="form-inline my-2 my-lg-0" action="{% url 'movies:search' %}" method="POST">
+          {% csrf_token %}
+          <input class="form-control mr-sm-2" name="search_value" placeholder="검색어를 입력하세요">
+          <button class="btn danger">검색하기</button>
+        </form>
+        {% if request.user.is_authenticated %}
+        <a class="nav-item nav-link pl-3" href="{% url 'accounts:profile' request.user.pk %}">프로필</a>
+        <a class="nav-item nav-link" href="{% url 'accounts:logout' %}">로그아웃</a>
+        {% else %}
+        <a class="nav-item nav-link pl-3" href="{% url 'accounts:login'%}">로그인</a>
+        <a class="nav-item nav-link" href="{% url 'accounts:signup' %}">회원가입</a>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+  {% if messages %}
+    {% for message in messages %}
+    <div {% if message.tags %} class="alert alert-{{ message.tags }} text-center"{% endif %}>{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+  <button class="topbutton btn btn-warning" onclick="window.scrollTo(0,0);">▲</button>
+  {% block content %}
+  {% endblock %}
+
+  {% bootstrap_javascript jquery='full' %}
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  {% block js %}
+  {% endblock %}
+</body>
+</html>

@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block css %}
+<style>
+  .titlement {
+    font-family: 'Gugi', cursive; 
+    color: crimson;
+    background-color: #f8f9fa;
+  }
+  .form-control {
+    cursor: pointer;
+  }
+</style>
+{% endblock %}
+
+{% block title %}영화 월드컵{% endblock %}
+
+{% block content %}
+<div class="container text-center mb-3">
+  <div class="row">
+    <h1 class="my-3 py-3 col-12 text-center titlement">영화 월드컵</h1>
+  </div>
+  <h1 class="mt-3 mb-4 text-light" id="selectGenre">장르를 선택해주세요</h1>
+  <select id="genres" class="my-3 form-control w-50 mx-auto">
+    <option value="777">선택하자!</option>
+    <option value="0">모든 장르</option>
+    <option value="12">모험</option>
+    <option value="14">판타지</option>
+    <option value="16">애니메이션</option>
+    <option value="18">드라마</option>
+    <option value="27">공포</option>
+    <option value="28">액션</option>
+    <option value="35">코미디</option>
+    <option value="36">역사</option>
+    <option value="37">서부</option>
+    <option value="53">스릴러</option>
+    <option value="80">범죄</option>
+    <option value="878">SF</option>
+    <option value="9648">미스터리</option>
+    <option value="10402">음악</option>
+    <option value="10749">로맨스</option>
+    <option value="10751">가족</option>
+    <option value="10752">전쟁</option>
+    <option value="10770">TV 영화</option>
+  </select>
+  <select id="round" class="d-none">
+    <option value="777">선택하자!</option>
+    <option value="8">8 강</option>
+    <option value="16">16 강</option>
+    <option value="32">32 강</option>
+  </select>
+  <div class="row mt-3" id="worldCup">
+    
+  </div>
+</div>
+{% endblock %}
+{% block js %}
+<script>
+  const genreButton = document.querySelector('#genres')
+  genreButton.addEventListener('change',function(event) {
+    if (event.target.value === 777) {alert('제대로 골라주세요!')}
+    else {
+    genreButton.className = 'd-none'
+    const roundButton = document.querySelector('#round')
+    const headline = document.querySelector('#selectGenre')
+    headline.innerHTML = '라운드 수를 선택해주세요!'
+    roundButton.className = 'mt-3 mb-4 form-control w-50 mx-auto'
+    roundButton.addEventListener('change',function(event2) {
+      if (event2.target.value === 777) {alert('제대로 골라주세용')}
+      else {
+      axios.get('{% url "movies:start_worldcup" 1234 9876%}'.replace(1234,event.target.value).replace(9876,event2.target.value))
+      .then(res => {
+        genreButton.className = 'd-none'
+        roundButton.className = 'd-none'
+        var player = res.data.movies
+        const worldCupWindow = document.querySelector('#worldCup')
+        const leftWindow = document.createElement('div')
+        const rightWindow = document.createElement('div')
+        leftWindow.className = 'col-6 text-center text-light vw-25 vh-25'
+        leftWindow.style = 'cursor: pointer;'
+        rightWindow.className = 'col-6 text-center text-light vw-25 vh-25'
+        rightWindow.style = 'cursor: pointer;'
+        const leftImg = document.createElement('img')
+        const rightImg = document.createElement('img')
+        leftWindow.appendChild(leftImg)
+        rightWindow.appendChild(rightImg)
+        const leftTitle = document.createElement('h3')
+        const rightTitle = document.createElement('h3')
+        leftTitle.className = 'my-4'
+        rightTitle.className = 'my-4'
+        leftWindow.appendChild(leftTitle)
+        rightWindow.appendChild(rightTitle)
+        worldCupWindow.appendChild(leftWindow)
+        worldCupWindow.appendChild(rightWindow)
+        var i = 0
+        leftImg.src = `https://image.tmdb.org/t/p/w500${player[i].poster_path}`
+        leftImg.style = 'height: 750px; width: 500px;'
+        rightImg.src = `https://image.tmdb.org/t/p/w500${player[i+1].poster_path}`
+        rightImg.style = 'height: 750px; width: 500px;'
+        leftTitle.innerText = player[i].title
+        rightTitle.innerText = player[i+1].title
+        choicd = new Array
+        const genreName = res.data.genre_name
+        headline.innerText = `${genreName} 영화 ${player.length}강입니다!`
+        leftWindow.addEventListener('click',function(event3){
+          choicd.push(player[i])
+          i+=2
+          if (i>=player.length) {
+            player = choicd
+            choicd = []
+            i = 0
+            if (player.length>2) {
+              headline.innerText = `${genreName} 영화 ${player.length}강입니다!`
+            } else {headline.innerText = `결승입니다!`}
+          }
+          if (player.length != 1) {
+          leftImg.src = `https://image.tmdb.org/t/p/w500${player[i].poster_path}`
+          rightImg.src = `https://image.tmdb.org/t/p/w500${player[i+1].poster_path}`
+          leftTitle.innerText = player[i].title
+          rightTitle.innerText = player[i+1].title
+          if (player.length>2) {
+          headline.innerText = `${genreName} 영화 ${i+2}/${player.length}강입니다!`}}
+          else {
+            leftImg.src = `https://image.tmdb.org/t/p/w500${player[0].poster_path}`
+            leftTitle.innerText = player[0].title
+            headline.innerText = `우승작은 <${player[0].title}>입니다!`
+            if (rightWindow.hasChildNodes) {
+              while (rightWindow.firstChild) {
+                rightWindow.firstChild.remove()
+              }
+            }
+            axios.get('{% url "movies:victory" 1234 %}'.replace(1234,player[0].id))
+            .then(response => {
+              const h1Tag = document.createElement('h2')
+              h1Tag.innerText = '역대 우승작 리스트'
+              h1Tag.className = 'text-light mb-3'
+              rightWindow.appendChild(h1Tag)
+              const olList = document.createElement('ol')
+              for(var j=0; j<response.data.movies.length; j++){
+                const liTag = document.createElement('li')
+                const liImg = document.createElement('img')
+                liImg.src = `https://image.tmdb.org/t/p/w154${response.data.movies[j].poster_path}`
+                liTag.appendChild(liImg)
+                liTag.innerText = `${response.data.movies[j].title} - ${response.data.movies[j].world_cup}회 우승`
+                liTag.className = 'text-light'
+                olList.appendChild(liTag)
+              }
+              rightWindow.appendChild(olList)
+            })
+            .catch(errr => {console.log(errr)})
+          } //
+        })
+        rightWindow.addEventListener('click',function(event3){
+          choicd.push(player[i+1])
+          i+=2
+          if (i>=player.length) {
+            player = choicd
+            choicd = []
+            i = 0
+            if (player.length>2) {
+              headline.innerText = `${genreName} 영화 ${player.length}강입니다!`
+            } else {headline.innerText = `결승입니다!`}
+          }
+          if (player.length != 1) {
+          leftImg.src = `https://image.tmdb.org/t/p/w500${player[i].poster_path}`
+          rightImg.src = `https://image.tmdb.org/t/p/w500${player[i+1].poster_path}`
+          leftTitle.innerText = player[i].title
+          rightTitle.innerText = player[i+1].title
+          if (player.length>2) {
+          headline.innerText = `${genreName} 영화 ${i+2}/${player.length}강입니다!`}}
+          else {
+            leftImg.src = `https://image.tmdb.org/t/p/w500${player[0].poster_path}`
+            leftTitle.innerText = player[0].title
+            headline.innerText = `우승작은 <${player[0].title}>입니다!`
+            if (rightWindow.hasChildNodes) {
+              while (rightWindow.firstChild) {
+                rightWindow.firstChild.remove()
+              }
+            }
+            axios.get('{% url "movies:victory" 1234 %}'.replace(1234,player[0].id))
+            .then(response => {
+              const h1Tag = document.createElement('h2')
+              h1Tag.innerText = '역대 우승작 리스트'
+              h1Tag.className = 'text-light mb-3'
+              rightWindow.appendChild(h1Tag)
+              const olList = document.createElement('ol')
+              for(var j=0; j<response.data.movies.length; j++){
+                const liTag = document.createElement('li')
+                const liImg = document.createElement('img')
+                liImg.src = `https://image.tmdb.org/t/p/w154${response.data.movies[j].poster_path}`
+                liTag.appendChild(liImg)
+                liTag.innerText = `${response.data.movies[j].title} - ${response.data.movies[j].world_cup}회 우승`
+                olList.appendChild(liTag)
+              }
+              rightWindow.appendChild(olList)
+            })
+            .catch(errr => {console.log(errr)})
+          }
+        })
+      })
+      .catch(err => {console.log(err)})}
+    })}
+  })
+</script>
+{% endblock %}

@@ -1,0 +1,699 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}추천창입니다{% endblock %}
+
+{% block css %}
+<style>
+  img:not(#logo) {
+    height: 600px;
+  }
+  .titlement {
+    font-family: 'Gugi', cursive; 
+    color: crimson;
+    background-color: #f8f9fa;
+  }
+  h5 {
+    margin: 16px 0;
+    color: #424242;
+  }
+  .form-control {
+    cursor: pointer;
+  }
+</style>
+{% endblock %}
+{% block content %}
+<div class="container text-center mb-3">
+  <div class="row">
+    <h1 class="my-3 py-3 col-12 text-center titlement">영화 추천</h1>
+  </div>
+  <h1 class="my-3 text-light">어떻게 추천받고 싶으신가요?</h1>
+  <a style="cursor: pointer; background: rgb(220, 20, 60);" class="btn btn-lg text-light m-2" id="random">랜덤</a>
+  <a style="cursor: pointer; background: rgb(220, 20, 60);" class="btn btn-lg text-light m-2" id="genre">장르별</a>
+  <a style="cursor: pointer; background: rgb(220, 20, 60);" class="btn btn-lg text-light m-2" id="mood">지금 기분</a>
+  <a style="cursor: pointer; background: rgb(220, 20, 60);" class="btn btn-lg text-light m-2" id="weather">지금 날씨</a><br>
+  <select id="도시선택창" class="d-none">
+    <option value="1835848">도시를 선택해 주세요</option>
+    <option value="1833747">울산</option>
+    <option value="1838524">부산</option>
+    <option value="1835329">대구</option>
+    <option value="1833105">원주</option>
+    <option value="1841245">마산</option>
+    <option value="1846052">진주</option>
+    <option value="1841811">광주</option>
+    <option value="1846266">제주</option>
+    <option value="1845136">춘천</option>
+    <option value="1839071">포항</option>
+    <option value="1845759">천안</option>
+    <option value="1842025">군산</option>
+    <option value="1841066">목포</option>
+    <option value="1845457">전주</option>
+    <option value="1832157">여수</option>
+    <option value="1836553">속초</option>
+    <option value="1843137">강릉</option>
+    <option value="1835648">순천</option>
+    <option value="1841603">경주</option>
+    <option value="1838069">삼척</option>
+    <option value="1832743">여주</option>
+    <option value="1833788">의정부</option>
+    <option value="1835235">대전</option>
+    <option value="1835553">수원</option>
+    <option value="1835848">서울</option>
+    <option value="1846326">창원</option>
+  </select>
+  <div id="allGenre" class="d-none">
+    {% for genre in genres %}
+    {% if genre.pk != 99 %}
+    <button data-id="{{genre.pk}}" class="m-2 allGenres btn btn-info">{{genre.name}}</button>
+    {% endif %}
+    {% endfor %}
+  </div>
+  <div class="row" id="recommend">
+
+  </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+  const weatherButton = document.querySelector('#weather')
+  weatherButton.addEventListener('click', function(event) {
+    const recommendWindow = document.querySelector('#recommend')
+    if (recommendWindow.hasChildNodes) {
+        while (recommendWindow.firstChild) {
+        recommendWindow.firstChild.remove()
+      }
+    }
+    const cities = document.querySelector('#도시선택창')
+    cities.className = 'my-3 form-control w-50 mx-auto'
+    const genres = document.querySelector('#allGenre')
+    genres.className = 'd-none'
+  })
+
+  const cities = document.querySelector('#도시선택창')
+  cities.addEventListener('change', function(event2) {
+    const recommendWindow = document.querySelector('#recommend')
+    if (recommendWindow.hasChildNodes) {
+        while (recommendWindow.firstChild) {
+        recommendWindow.firstChild.remove()
+      }
+    }
+    const API_KEY = '{{weather_key}}'
+    const cityId = event2.target.value
+    axios.get(`https://api.openweathermap.org/data/2.5/weather?id=${cityId}&appid=${API_KEY}`)
+    .then(res => {
+      const weatherState = document.createElement('h1')
+      weatherState.innerText = `그 지역의 날씨는 ${res.data.weather[0].main}`
+      weatherState.className = 'col-12 text-center my-2 text-light'
+      recommendWindow.appendChild(weatherState) 
+      if (200<=res.data.weather[0].id && res.data.weather[0].id<300) {
+        const genres = [10752,27]
+        for(var i=0; i<genres.length; i++) {
+          axios.get("{% url 'movies:recommend_genre' 1234 %}".replace(1234,genres[i]))
+          .then(respon => {
+            var recommendGenre = document.createElement('h1')
+            recommendGenre.innerText = respon.data.genre
+            recommendGenre.className = 'col-12 text-center my-3 text-light'
+            recommendWindow.appendChild(recommendGenre)
+            for(var j=0; j<3; j++) {
+              var recommendMovieCard1 = document.createElement('div')
+              recommendMovieCard1.className = 'card col-4 py-3 my-3'
+              var img1 = document.createElement('img')
+              img1.src = `https://image.tmdb.org/t/p/w780/${respon.data.movies[j].poster_path}`
+              img1.className = 'card-img-top w-100'
+              var recommendMovieCard1Body = document.createElement('div')
+              var movieTitle1 = document.createElement('h5')
+              movieTitle1.innerText = respon.data.movies[j].title
+              var movieDetail1 = document.createElement('a')
+              movieDetail1.className = 'btn btn-outline-dark'
+              movieDetail1.innerText = '영화 정보 보기'
+              movieDetail1.href = '{% url "movies:movie_detail" 1234 %}'.replace(1234,respon.data.movies[j].id)
+              recommendMovieCard1.style = 'background: #f8f9fa;'
+              recommendMovieCard1Body.appendChild(movieTitle1)
+              recommendMovieCard1Body.appendChild(movieDetail1)
+              recommendMovieCard1.appendChild(img1)
+              recommendMovieCard1.appendChild(recommendMovieCard1Body)
+              recommendWindow.appendChild(recommendMovieCard1)
+            }
+          })
+          .catch(err => {console.log(err)})
+        }
+      } else if (300<=res.data.weather[0].id && res.data.weather[0].id<322) {
+        const genres = [10751,18]
+        for(var i=0; i<genres.length; i++) {
+          axios.get("{% url 'movies:recommend_genre' 1234 %}".replace(1234,genres[i]))
+          .then(respon => {
+            var recommendGenre = document.createElement('h1')
+            recommendGenre.innerText = respon.data.genre
+            recommendGenre.className = 'col-12 text-center my-3 text-light'
+            recommendWindow.appendChild(recommendGenre)
+            for(var j=0; j<3; j++) {
+              var recommendMovieCard1 = document.createElement('div')
+              recommendMovieCard1.className = 'card col-4 py-3 my-3'
+              var img1 = document.createElement('img')
+              img1.src = `https://image.tmdb.org/t/p/w780/${respon.data.movies[j].poster_path}`
+              img1.className = 'card-img-top w-100'
+              var recommendMovieCard1Body = document.createElement('div')
+              var movieTitle1 = document.createElement('h5')
+              movieTitle1.innerText = respon.data.movies[j].title
+              var movieDetail1 = document.createElement('a')
+              movieDetail1.className = 'btn btn-outline-dark'
+              movieDetail1.innerText = '영화 정보 보기'
+              recommendMovieCard1.style = 'background: #f8f9fa;'
+              movieDetail1.href = '{% url "movies:movie_detail" 1234 %}'.replace(1234,respon.data.movies[j].id)
+              recommendMovieCard1Body.appendChild(movieTitle1)
+              recommendMovieCard1Body.appendChild(movieDetail1)
+              recommendMovieCard1.appendChild(img1)
+              recommendMovieCard1.appendChild(recommendMovieCard1Body)
+              recommendWindow.appendChild(recommendMovieCard1)
+            }
+          })
+          .catch(err => {console.log(err)})
+        }
+      } else if (500<=res.data.weather[0].id && res.data.weather[0].id<532) {
+        const genres = [28,35]
+        for(var i=0; i<genres.length; i++) {
+          axios.get("{% url 'movies:recommend_genre' 1234 %}".replace(1234,genres[i]))
+          .then(respon => {
+            var recommendGenre = document.createElement('h1')
+            recommendGenre.innerText = respon.data.genre
+            recommendGenre.className = 'col-12 text-center my-3 text-light'
+            recommendWindow.appendChild(recommendGenre)
+            for(var j=0; j<3; j++) {
+              var recommendMovieCard1 = document.createElement('div')
+              recommendMovieCard1.className = 'card col-4 py-3 my-3'
+              var img1 = document.createElement('img')
+              img1.src = `https://image.tmdb.org/t/p/w780/${respon.data.movies[j].poster_path}`
+              img1.className = 'card-img-top w-100'
+              var recommendMovieCard1Body = document.createElement('div')
+              var movieTitle1 = document.createElement('h5')
+              movieTitle1.innerText = respon.data.movies[j].title
+              var movieDetail1 = document.createElement('a')
+              movieDetail1.className = 'btn btn-outline-dark'
+              movieDetail1.innerText = '영화 정보 보기'
+              recommendMovieCard1.style = 'background: #f8f9fa;'
+              movieDetail1.href = '{% url "movies:movie_detail" 1234 %}'.replace(1234,respon.data.movies[j].id)
+              recommendMovieCard1Body.appendChild(movieTitle1)
+              recommendMovieCard1Body.appendChild(movieDetail1)
+              recommendMovieCard1.appendChild(img1)
+              recommendMovieCard1.appendChild(recommendMovieCard1Body)
+              recommendWindow.appendChild(recommendMovieCard1)
+            }
+          })
+          .catch(err => {console.log(err)})
+        }
+      } else if (600<=res.data.weather[0].id && res.data.weather[0].id<623) {
+        const genres = [18,10749]
+        for(var i=0; i<genres.length; i++) {
+          axios.get("{% url 'movies:recommend_genre' 1234 %}".replace(1234,genres[i]))
+          .then(respon => {
+            var recommendGenre = document.createElement('h1')
+            recommendGenre.innerText = respon.data.genre
+            recommendGenre.className = 'col-12 text-center my-3 text-light'
+            recommendWindow.appendChild(recommendGenre)
+            for(var j=0; j<3; j++) {
+              var recommendMovieCard1 = document.createElement('div')
+              recommendMovieCard1.className = 'card col-4 py-3 my-3'
+              var img1 = document.createElement('img')
+              img1.src = `https://image.tmdb.org/t/p/w780/${respon.data.movies[j].poster_path}`
+              img1.className = 'card-img-top w-100'
+              var recommendMovieCard1Body = document.createElement('div')
+              var movieTitle1 = document.createElement('h5')
+              movieTitle1.innerText = respon.data.movies[j].title
+              var movieDetail1 = document.createElement('a')
+              movieDetail1.className = 'btn btn-outline-dark'
+              movieDetail1.innerText = '영화 정보 보기'
+              recommendMovieCard1.style = 'background: #f8f9fa;'
+              movieDetail1.href = '{% url "movies:movie_detail" 1234 %}'.replace(1234,respon.data.movies[j].id)
+              recommendMovieCard1Body.appendChild(movieTitle1)
+              recommendMovieCard1Body.appendChild(movieDetail1)
+              recommendMovieCard1.appendChild(img1)
+              recommendMovieCard1.appendChild(recommendMovieCard1Body)
+              recommendWindow.appendChild(recommendMovieCard1)
+            }
+          })
+          .catch(err => {console.log(err)})
+        }
+      } else if (700<=res.data.weather[0].id && res.data.weather[0].id<782) {
+        const genres = [53,14]
+        for(var i=0; i<genres.length; i++) {
+          axios.get("{% url 'movies:recommend_genre' 1234 %}".replace(1234,genres[i]))
+          .then(respon => {
+            var recommendGenre = document.createElement('h1')
+            recommendGenre.innerText = respon.data.genre
+            recommendGenre.className = 'col-12 text-center my-3 text-light'
+            recommendWindow.appendChild(recommendGenre)
+            for(var j=0; j<3; j++) {
+              var recommendMovieCard1 = document.createElement('div')
+              recommendMovieCard1.className = 'card col-4 py-3 my-3'
+              var img1 = document.createElement('img')
+              img1.src = `https://image.tmdb.org/t/p/w780/${respon.data.movies[j].poster_path}`
+              img1.className = 'card-img-top w-100'
+              var recommendMovieCard1Body = document.createElement('div')
+              var movieTitle1 = document.createElement('h5')
+              movieTitle1.innerText = respon.data.movies[j].title
+              var movieDetail1 = document.createElement('a')
+              movieDetail1.className = 'btn btn-outline-dark'
+              movieDetail1.innerText = '영화 정보 보기'
+              recommendMovieCard1.style = 'background: #f8f9fa;'
+              movieDetail1.href = '{% url "movies:movie_detail" 1234 %}'.replace(1234,respon.data.movies[j].id)
+              recommendMovieCard1Body.appendChild(movieTitle1)
+              recommendMovieCard1Body.appendChild(movieDetail1)
+              recommendMovieCard1.appendChild(img1)
+              recommendMovieCard1.appendChild(recommendMovieCard1Body)
+              recommendWindow.appendChild(recommendMovieCard1)
+            }
+          })
+          .catch(err => {console.log(err)})
+        }
+      } else if (res.data.weather[0].id == 800) {
+        const genres = [10402,12]
+        for(var i=0; i<genres.length; i++) {
+          axios.get("{% url 'movies:recommend_genre' 1234 %}".replace(1234,genres[i]))
+          .then(respon => {
+            var recommendGenre = document.createElement('h1')
+            recommendGenre.innerText = respon.data.genre
+            recommendGenre.className = 'col-12 text-center my-3 text-light'
+            recommendWindow.appendChild(recommendGenre)
+            for(var j=0; j<3; j++) {
+              var recommendMovieCard1 = document.createElement('div')
+              recommendMovieCard1.className = 'card col-4 py-3 my-3'
+              var img1 = document.createElement('img')
+              img1.src = `https://image.tmdb.org/t/p/w780/${respon.data.movies[j].poster_path}`
+              img1.className = 'card-img-top w-100'
+              var recommendMovieCard1Body = document.createElement('div')
+              var movieTitle1 = document.createElement('h5')
+              movieTitle1.innerText = respon.data.movies[j].title
+              var movieDetail1 = document.createElement('a')
+              movieDetail1.className = 'btn btn-outline-dark'
+              movieDetail1.innerText = '영화 정보 보기'
+              recommendMovieCard1.style = 'background: #f8f9fa;'
+              movieDetail1.href = '{% url "movies:movie_detail" 1234 %}'.replace(1234,respon.data.movies[j].id)
+              recommendMovieCard1Body.appendChild(movieTitle1)
+              recommendMovieCard1Body.appendChild(movieDetail1)
+              recommendMovieCard1.appendChild(img1)
+              recommendMovieCard1.appendChild(recommendMovieCard1Body)
+              recommendWindow.appendChild(recommendMovieCard1)
+            }
+          })
+          .catch(err => {console.log(err)})
+        }
+      } else {
+        const genres = [16,37,35]
+        for(var i=0; i<genres.length; i++) {
+          axios.get("{% url 'movies:recommend_genre' 1234 %}".replace(1234,genres[i]))
+          .then(respon => {
+            var recommendGenre = document.createElement('h1')
+            recommendGenre.innerText = respon.data.genre
+            recommendGenre.className = 'col-12 text-center my-3 text-light'
+            recommendWindow.appendChild(recommendGenre)
+            for(var j=0; j<3; j++) {
+              var recommendMovieCard1 = document.createElement('div')
+              recommendMovieCard1.className = 'card col-4 py-3 my-3'
+              var img1 = document.createElement('img')
+              img1.src = `https://image.tmdb.org/t/p/w780/${respon.data.movies[j].poster_path}`
+              img1.className = 'card-img-top w-100'
+              var recommendMovieCard1Body = document.createElement('div')
+              var movieTitle1 = document.createElement('h5')
+              movieTitle1.innerText = respon.data.movies[j].title
+              var movieDetail1 = document.createElement('a')
+              movieDetail1.className = 'btn btn-outline-dark'
+              movieDetail1.innerText = '영화 정보 보기'
+              recommendMovieCard1.style = 'background: #f8f9fa;'
+              movieDetail1.href = '{% url "movies:movie_detail" 1234 %}'.replace(1234,respon.data.movies[j].id)
+              recommendMovieCard1Body.appendChild(movieTitle1)
+              recommendMovieCard1Body.appendChild(movieDetail1)
+              recommendMovieCard1.appendChild(img1)
+              recommendMovieCard1.appendChild(recommendMovieCard1Body)
+              recommendWindow.appendChild(recommendMovieCard1)
+            }
+          })
+          .catch(err => {console.log(err)})
+        }
+      }
+    })
+    .catch(err => {console.log(err)})
+  })
+  
+  const randomButtom =document.querySelector('#random')
+  randomButtom.addEventListener('click',function(event) {
+    const citiesButton = document.querySelector('#도시선택창')
+    citiesButton.className = 'd-none'
+    const genres = document.querySelector('#allGenre')
+    genres.className = 'd-none'
+    axios.get('{% url "movies:recommend_random" %}')
+    .then(res => {
+      const randomState = document.createElement('h1')
+      randomState.innerText = '랜덤 추천 목록입니다!'
+      const recommendWindow = document.querySelector('#recommend')
+      if (recommendWindow.hasChildNodes) {
+          while (recommendWindow.firstChild) {
+          recommendWindow.firstChild.remove()
+        }
+      }
+      randomState.className = 'col-12 text-center py-3 my-3 text-light'
+      recommendWindow.appendChild(randomState)
+      for(var i=0;i<res.data.random_movies.length;i++) {
+        var recommendMovieCard1 = document.createElement('div')
+        recommendMovieCard1.className = 'card col-4 py-3 my-3'
+        recommendMovieCard1.style = 'background: #f8f9fa;'
+        var img1 = document.createElement('img')
+        img1.src = `https://image.tmdb.org/t/p/w780/${res.data.random_movies[i].poster_path}`
+        img1.className = 'card-img-top w-100'
+        var recommendMovieCard1Body = document.createElement('div')
+        var movieTitle1 = document.createElement('h5')
+        movieTitle1.innerText = res.data.random_movies[i].title
+        var movieDetail1 = document.createElement('a')
+        movieDetail1.className = 'btn btn-outline-dark'
+        movieDetail1.innerText = '영화 정보 보기'
+        movieDetail1.href = "{% url 'movies:movie_detail' 1234 %}".replace(1234,res.data.random_movies[i].id)
+        recommendMovieCard1Body.appendChild(movieTitle1)
+        recommendMovieCard1Body.appendChild(movieDetail1)
+        recommendMovieCard1.appendChild(img1)
+        recommendMovieCard1.appendChild(recommendMovieCard1Body)
+        recommendWindow.appendChild(recommendMovieCard1)
+      }
+    })
+    .catch(err => {console.log(err)})
+  })
+
+  const genreButton = document.querySelector('#genre')
+  genreButton.addEventListener('click', function(event) {
+    const recommendGenreButtons = document.querySelectorAll('.allGenres')
+    recommendGenreButtons.forEach(function(rcgb){rcgb.className = 'm-2 allGenres btn btn-info'})
+    const citiesButton = document.querySelector('#도시선택창')
+    citiesButton.className = 'd-none'
+    const genres = document.querySelector('#allGenre')
+    genres.className = 'my-3'
+    const recommendWindow = document.querySelector('#recommend')
+    if (recommendWindow.hasChildNodes) {
+        while (recommendWindow.firstChild) {
+        recommendWindow.firstChild.remove()
+      }
+    }
+  })
+
+  const moodButton = document.querySelector('#mood')
+  moodButton.addEventListener('click', function(event) {
+    const recommendWindow = document.querySelector('#recommend')
+    if (recommendWindow.hasChildNodes) {
+        while (recommendWindow.firstChild) {
+        recommendWindow.firstChild.remove()
+      }
+    }
+    const citiesButton = document.querySelector('#도시선택창')
+    citiesButton.className = 'd-none'
+    const genres = document.querySelector('#allGenre')
+    genres.className = 'd-none'
+    const moodDiv = document.createElement('div')
+    moodDiv.className = 'col-12 my-5 text-light'
+    const question = document.createElement('h1')
+    question.innerText = '지금 기분이 어떤지 알려주실래요?'
+    question.className = 'mb-4'
+    moodDiv.appendChild(question)
+    recommendWindow.appendChild(moodDiv)
+    const goodButton = document.createElement('a')
+    const badButton = document.createElement('a')
+    const drowsyButton = document.createElement('a')
+    const blueButton = document.createElement('a')
+    const dontknowButton = document.createElement('a')
+    goodButton.innerText = '기분 좋아요'
+    goodButton.className = 'btn btn-info text-light m-4 btn-lg'
+    goodButton.style = 'cursor: pointer;'
+    badButton.innerText = '기분 나빠요'
+    badButton.className = 'btn btn-danger text-light m-4 btn-lg'
+    badButton.style = 'cursor: pointer;'
+    drowsyButton.innerText = '나른해요'
+    drowsyButton.className = 'btn btn-warning text-light m-4 btn-lg'
+    drowsyButton.style = 'cursor: pointer;'
+    blueButton.innerText = '우울해요'
+    blueButton.className = 'btn btn-primary text-light m-4 btn-lg'
+    blueButton.style = 'cursor: pointer;'
+    dontknowButton.innerText = '잘 모르겠어요'
+    dontknowButton.className = 'btn btn-secondary text-light m-4 btn-lg'
+    dontknowButton.style = 'cursor: pointer;'
+    setTimeout(function(){
+      moodDiv.appendChild(goodButton)
+      moodDiv.appendChild(badButton)
+      moodDiv.appendChild(drowsyButton)
+      moodDiv.appendChild(blueButton)
+      moodDiv.appendChild(dontknowButton)
+    },500)
+    goodButton.addEventListener('click',function(){
+      while (recommendWindow.firstChild) {
+        recommendWindow.firstChild.remove()
+      }
+      const headTitle = document.createElement('h1')
+      headTitle.className = 'my-3 col-12 text-center text-light'
+      headTitle.innerText = '오케이 알겠어요!\n 그럼 이것들은 어떤가요?'
+      recommendWindow.appendChild(headTitle)
+      const genreList = [37,80,878]
+      setTimeout(function(){
+        for(var i=0; i<genreList.length; i++) {
+          axios.get("{% url 'movies:recommend_genre' 1234 %}".replace(1234,genreList[i]))
+          .then(respon => {
+            var recommendGenre = document.createElement('h1')
+            recommendGenre.innerText = respon.data.genre
+            recommendGenre.className = 'col-12 text-center my-3 text-light'
+            recommendWindow.appendChild(recommendGenre)
+            for(var j=0; j<3; j++) {
+              var recommendMovieCard1 = document.createElement('div')
+              recommendMovieCard1.className = 'card col-4 py-3 my-3'
+              var img1 = document.createElement('img')
+              img1.src = `https://image.tmdb.org/t/p/w780/${respon.data.movies[j].poster_path}`
+              img1.className = 'card-img-top w-100'
+              var recommendMovieCard1Body = document.createElement('div')
+              var movieTitle1 = document.createElement('h5')
+              movieTitle1.innerText = respon.data.movies[j].title
+              recommendMovieCard1.style = 'background: #f8f9fa;'
+              var movieDetail1 = document.createElement('a')
+              movieDetail1.className = 'btn btn-outline-dark'
+              movieDetail1.innerText = '영화 정보 보기'
+              movieDetail1.href = '{% url "movies:movie_detail" 1234 %}'.replace(1234,respon.data.movies[j].id)
+              recommendMovieCard1Body.appendChild(movieTitle1)
+              recommendMovieCard1Body.appendChild(movieDetail1)
+              recommendMovieCard1.appendChild(img1)
+              recommendMovieCard1.appendChild(recommendMovieCard1Body)
+              recommendWindow.appendChild(recommendMovieCard1)
+            }
+          })
+          .catch(err => {console.log(err)})
+        }
+      },500)
+    })
+    badButton.addEventListener('click',function(){
+      while (recommendWindow.firstChild) {
+        recommendWindow.firstChild.remove()
+      }
+      const headTitle = document.createElement('h1')
+      headTitle.className = 'my-3 col-12 text-center text-light'
+      headTitle.innerText = '오케이 알겠어요\n 그럼 이것들은 어떤가요'
+      recommendWindow.appendChild(headTitle)
+      const genreList = [12,35,10751]
+      setTimeout(function(){
+        for(var i=0; i<genreList.length; i++) {
+          axios.get("{% url 'movies:recommend_genre' 1234 %}".replace(1234,genreList[i]))
+          .then(respon => {
+            var recommendGenre = document.createElement('h1')
+            recommendGenre.innerText = respon.data.genre
+            recommendGenre.className = 'col-12 text-center my-3 text-light'
+            recommendWindow.appendChild(recommendGenre)
+            for(var j=0; j<3; j++) {
+              var recommendMovieCard1 = document.createElement('div')
+              recommendMovieCard1.className = 'card col-4 py-3 my-3'
+              var img1 = document.createElement('img')
+              img1.src = `https://image.tmdb.org/t/p/w780/${respon.data.movies[j].poster_path}`
+              img1.className = 'card-img-top w-100'
+              var recommendMovieCard1Body = document.createElement('div')
+              var movieTitle1 = document.createElement('h5')
+              movieTitle1.innerText = respon.data.movies[j].title
+              recommendMovieCard1.style = 'background: #f8f9fa;'
+              var movieDetail1 = document.createElement('a')
+              movieDetail1.className = 'btn btn-outline-dark'
+              movieDetail1.innerText = '영화 정보 보기'
+              movieDetail1.href = '{% url "movies:movie_detail" 1234 %}'.replace(1234,respon.data.movies[j].id)
+              recommendMovieCard1Body.appendChild(movieTitle1)
+              recommendMovieCard1Body.appendChild(movieDetail1)
+              recommendMovieCard1.appendChild(img1)
+              recommendMovieCard1.appendChild(recommendMovieCard1Body)
+              recommendWindow.appendChild(recommendMovieCard1)
+            }
+          })
+          .catch(err => {console.log(err)})
+        }
+      },500)
+    })
+    drowsyButton.addEventListener('click',function(){
+      while (recommendWindow.firstChild) {
+        recommendWindow.firstChild.remove()
+      }
+      const headTitle = document.createElement('h1')
+      headTitle.className = 'my-3 col-12 text-center text-light'
+      headTitle.innerText = '오케이 알겠어요\n 그럼 이것들은 어떤가요'
+      recommendWindow.appendChild(headTitle)
+      const genreList = [10749,10402,16]
+      setTimeout(function(){
+        for(var i=0; i<genreList.length; i++) {
+          axios.get("{% url 'movies:recommend_genre' 1234 %}".replace(1234,genreList[i]))
+          .then(respon => {
+            var recommendGenre = document.createElement('h1')
+            recommendGenre.innerText = respon.data.genre
+            recommendGenre.className = 'col-12 text-center my-3 text-light'
+            recommendWindow.appendChild(recommendGenre)
+            for(var j=0; j<3; j++) {
+              var recommendMovieCard1 = document.createElement('div')
+              recommendMovieCard1.className = 'card col-4 py-3 my-3'
+              var img1 = document.createElement('img')
+              img1.src = `https://image.tmdb.org/t/p/w780/${respon.data.movies[j].poster_path}`
+              img1.className = 'card-img-top w-100'
+              var recommendMovieCard1Body = document.createElement('div')
+              var movieTitle1 = document.createElement('h5')
+              movieTitle1.innerText = respon.data.movies[j].title
+              var movieDetail1 = document.createElement('a')
+              movieDetail1.className = 'btn btn-outline-dark'
+              movieDetail1.innerText = '영화 정보 보기'
+              recommendMovieCard1.style = 'background: #f8f9fa;'
+              movieDetail1.href = '{% url "movies:movie_detail" 1234 %}'.replace(1234,respon.data.movies[j].id)
+              recommendMovieCard1Body.appendChild(movieTitle1)
+              recommendMovieCard1Body.appendChild(movieDetail1)
+              recommendMovieCard1.appendChild(img1)
+              recommendMovieCard1.appendChild(recommendMovieCard1Body)
+              recommendWindow.appendChild(recommendMovieCard1)
+            }
+          })
+          .catch(err => {console.log(err)})
+        }
+      },500)
+    })
+    blueButton.addEventListener('click',function(){
+      while (recommendWindow.firstChild) {
+        recommendWindow.firstChild.remove()
+      }
+      const headTitle = document.createElement('h1')
+      headTitle.className = 'my-3 col-12 text-center text-light'
+      headTitle.innerText = '오케이 알겠어요\n 그럼 이것들은 어떤가요'
+      recommendWindow.appendChild(headTitle)
+      const genreList = [28,35,80]
+      setTimeout(function(){
+        for(var i=0; i<genreList.length; i++) {
+          axios.get("{% url 'movies:recommend_genre' 1234 %}".replace(1234,genreList[i]))
+          .then(respon => {
+            var recommendGenre = document.createElement('h1')
+            recommendGenre.innerText = respon.data.genre
+            recommendGenre.className = 'col-12 text-center my-3 text-light'
+            recommendWindow.appendChild(recommendGenre)
+            for(var j=0; j<3; j++) {
+              var recommendMovieCard1 = document.createElement('div')
+              recommendMovieCard1.className = 'card col-4 py-3 my-3'
+              var img1 = document.createElement('img')
+              img1.src = `https://image.tmdb.org/t/p/w780/${respon.data.movies[j].poster_path}`
+              img1.className = 'card-img-top w-100'
+              var recommendMovieCard1Body = document.createElement('div')
+              var movieTitle1 = document.createElement('h5')
+              movieTitle1.innerText = respon.data.movies[j].title
+              var movieDetail1 = document.createElement('a')
+              movieDetail1.className = 'btn btn-outline-dark'
+              movieDetail1.innerText = '영화 정보 보기'
+              recommendMovieCard1.style = 'background: #f8f9fa;'
+              movieDetail1.href = '{% url "movies:movie_detail" 1234 %}'.replace(1234,respon.data.movies[j].id)
+              recommendMovieCard1Body.appendChild(movieTitle1)
+              recommendMovieCard1Body.appendChild(movieDetail1)
+              recommendMovieCard1.appendChild(img1)
+              recommendMovieCard1.appendChild(recommendMovieCard1Body)
+              recommendWindow.appendChild(recommendMovieCard1)
+            }
+          })
+          .catch(err => {console.log(err)})
+        }
+      },500)
+    })
+    dontknowButton.addEventListener('click',function(){
+      while (recommendWindow.firstChild) {
+        recommendWindow.firstChild.remove()
+      }
+      const headTitle = document.createElement('h1')
+      headTitle.className = 'my-3 col-12 text-center text-light'
+      headTitle.innerText = '오케이 알겠어요\n 그럼 이것들은 어떤가요'
+      recommendWindow.appendChild(headTitle)
+      const genreList = [36,9648,10752]
+      setTimeout(function(){
+        for(var i=0; i<genreList.length; i++) {
+          axios.get("{% url 'movies:recommend_genre' 1234 %}".replace(1234,genreList[i]))
+          .then(respon => {
+            var recommendGenre = document.createElement('h1')
+            recommendGenre.innerText = respon.data.genre
+            recommendGenre.className = 'col-12 text-center my-3 text-light'
+            recommendWindow.appendChild(recommendGenre)
+            for(var j=0; j<3; j++) {
+              var recommendMovieCard1 = document.createElement('div')
+              recommendMovieCard1.className = 'card col-4 py-3 my-3'
+              var img1 = document.createElement('img')
+              img1.src = `https://image.tmdb.org/t/p/w780/${respon.data.movies[j].poster_path}`
+              img1.className = 'card-img-top w-100'
+              var recommendMovieCard1Body = document.createElement('div')
+              var movieTitle1 = document.createElement('h5')
+              movieTitle1.innerText = respon.data.movies[j].title
+              var movieDetail1 = document.createElement('a')
+              movieDetail1.className = 'btn btn-outline-dark'
+              movieDetail1.innerText = '영화 정보 보기'
+              recommendMovieCard1.style = 'background: #f8f9fa;'
+              movieDetail1.href = '{% url "movies:movie_detail" 1234 %}'.replace(1234,respon.data.movies[j].id)
+              recommendMovieCard1Body.appendChild(movieTitle1)
+              recommendMovieCard1Body.appendChild(movieDetail1)
+              recommendMovieCard1.appendChild(img1)
+              recommendMovieCard1.appendChild(recommendMovieCard1Body)
+              recommendWindow.appendChild(recommendMovieCard1)
+            }
+          })
+          .catch(err => {console.log(err)})
+        }
+      },500)
+    })
+  })
+
+  const recommendGenreButtons = document.querySelectorAll('.allGenres')
+  recommendGenreButtons.forEach(function(recommendGenreButton){
+    recommendGenreButton.addEventListener('click',function(event){
+      recommendGenreButtons.forEach(function(rcgb){rcgb.className = 'm-2 allGenres btn btn-info'})
+      recommendGenreButton.className = 'm-2 allGenres btn btn-warning text-light'
+      const recommendWindow = document.querySelector('#recommend')
+      if (recommendWindow.hasChildNodes) {
+        while (recommendWindow.firstChild) {
+          recommendWindow.firstChild.remove()
+        }
+      }
+      if (event.target.dataset.id != 99) {
+      axios.get("{% url 'movies:recommend_genre' 1234 %}".replace(1234,event.target.dataset.id))
+      .then(respon => {
+        var recommendGenre = document.createElement('h1')
+        recommendGenre.innerText = `${respon.data.genre} 추천 목록입니다!`
+        recommendGenre.className = 'col-12 text-center my-2 text-light'
+        recommendWindow.appendChild(recommendGenre)
+        for(var j=0; j<3; j++) {
+          var recommendMovieCard1 = document.createElement('div')
+          recommendMovieCard1.className = 'card col-4 py-3 my-3'
+          var img1 = document.createElement('img')
+          img1.src = `https://image.tmdb.org/t/p/w780/${respon.data.movies[j].poster_path}`
+          img1.className = 'card-img-top w-100'
+          var recommendMovieCard1Body = document.createElement('div')
+          var movieTitle1 = document.createElement('h5')
+          movieTitle1.innerText = respon.data.movies[j].title
+          var movieDetail1 = document.createElement('a')
+          movieDetail1.className = 'btn btn-outline-dark'
+          movieDetail1.innerText = '영화 정보 보기'
+          recommendMovieCard1.style = 'background: #f8f9fa;'
+          movieDetail1.href = '{% url "movies:movie_detail" 1234 %}'.replace(1234,respon.data.movies[j].id)
+          recommendMovieCard1Body.appendChild(movieTitle1)
+          recommendMovieCard1Body.appendChild(movieDetail1)
+          recommendMovieCard1.appendChild(img1)
+          recommendMovieCard1.appendChild(recommendMovieCard1Body)
+          recommendWindow.appendChild(recommendMovieCard1)
+        }
+      })
+      .catch(err => {console.log(err)})
+      } else {alert('해당 장르는 아직 등록되지 않았습니다')}
+    })
+  })
+  
+</script>
+{% endblock %}
